@@ -23,6 +23,8 @@ class ViewController: UIViewController {
             scoreLabel.text = "Score: \(score)"
         }
     }
+    
+    var wordsMatched = 0
     var level = 1
     
     override func viewDidLoad() {
@@ -79,6 +81,8 @@ class ViewController: UIViewController {
         
         let buttonsView = UIView()
         buttonsView.translatesAutoresizingMaskIntoConstraints = false
+        buttonsView.layer.borderWidth = 2
+        buttonsView.layer.borderColor = UIColor.gray.cgColor;
         view.addSubview(buttonsView)
         
         NSLayoutConstraint.activate([
@@ -114,6 +118,7 @@ class ViewController: UIViewController {
             buttonsView.topAnchor.constraint(equalTo: submit.bottomAnchor, constant: 20),
             buttonsView.bottomAnchor.constraint(equalTo: view.layoutMarginsGuide.bottomAnchor, constant: -20)
             
+            
         ])
         
         let width = 150
@@ -137,7 +142,7 @@ class ViewController: UIViewController {
     }
     
     @objc func submitTapped(_ sender: UIButton) {
-        guard let answerText = currentAnswer.text else { return }
+        guard let answerText = currentAnswer.text else {return}
 
         if let solutionPosition = solutions.firstIndex(of: answerText) {
             activatedButtons.removeAll()
@@ -148,12 +153,18 @@ class ViewController: UIViewController {
 
             currentAnswer.text = ""
             score += 1
+            wordsMatched += 1
 
-            if score % 7 == 0 {
+            if wordsMatched % 7 == 0 {
                 let ac = UIAlertController(title: "Well done!", message: "Are you ready for the next level?", preferredStyle: .alert)
                 ac.addAction(UIAlertAction(title: "Let's go!", style: .default, handler: levelUp))
                 present(ac, animated: true)
             }
+        } else{
+            score -= 1
+            let incorrctAC = UIAlertController(title: "Incorrect!", message: "Try Again", preferredStyle: .alert)
+            incorrctAC.addAction(UIAlertAction(title: "OK", style: .cancel))
+            present(incorrctAC, animated: true)
         }
     }
     
@@ -188,14 +199,15 @@ class ViewController: UIViewController {
     
     
     func loadLevel() {
-        var clueString = ""
+       var clueString = ""
         var solutionString = ""
         var letterBits = [String]()
 
         if let levelFileURL = Bundle.main.url(forResource: "level\(level)", withExtension: "txt") {
             if let levelContents = try? String(contentsOf: levelFileURL) {
-                var lines = levelContents.components(separatedBy: "\n")
+                var lines = levelContents.components(separatedBy: "|n|")
                 lines.shuffle()
+                print(lines)
 
                 for (index, line) in lines.enumerated() {
                     let parts = line.components(separatedBy: ": ")
@@ -212,6 +224,7 @@ class ViewController: UIViewController {
                     letterBits += bits
                 }
             }
+        
         }
 
         cluesLabel.text = clueString.trimmingCharacters(in: .whitespacesAndNewlines)
